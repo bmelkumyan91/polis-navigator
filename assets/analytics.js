@@ -44,6 +44,27 @@
       setConsent("no"); removeBanner();
     });
   }
+
+  /* Click goals for first-party navigation only, not conversions inside Pampadu iframes. */
+  var goalByPath = {
+    "/banking/": "open_banking",
+    "/osago/": "open_osago",
+    "/ipoteka/": "open_ipoteka"
+  };
+  document.addEventListener("click", function(event) {
+    if (getConsent() !== "yes" || !window.__financialMetrikaStarted || typeof window.ym !== "function") return;
+    var link = event.target.closest && event.target.closest("a[href]");
+    if (!link) return;
+    var url;
+    try { url = new URL(link.href, location.href); } catch (_) { return; }
+    if (url.origin !== location.origin) return;
+    var path = url.pathname.replace(/\\/g, "/");
+    var prefix = "/polis-navigator";
+    if (path.indexOf(prefix + "/") === 0) path = path.slice(prefix.length);
+    if (path.endsWith("/index.html")) path = path.slice(0, -10);
+    var goal = goalByPath[path];
+    if (goal) window.ym(counterId, "reachGoal", goal);
+  });
   document.addEventListener("DOMContentLoaded",function(){
     var value=getConsent();
     if(value==="yes") startMetrika();
